@@ -1,0 +1,3 @@
+new lineprint str to file
+print str to file
+

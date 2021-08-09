@@ -67,3 +67,48 @@ class Stock:
         self.name = name
         self.shares = shares
         self.price = price
+
+'''
+使用装饰器简化上述代码
+'''
+def check_attributes(**kwargs):
+    def decorate(cls):
+        for key, value in kwargs.items():
+            if isinstance(value, Descriptor):
+                value.name = key
+                setattr(cls, key, value)
+            else:
+                setattr(cls, key, value(key))
+        return cls
+    return decorate
+
+@check_attributes(name=SizedString(size=8),
+                  shares=UnsignedInteger,
+                  price=UnsignedFloat)
+class Stock:
+    def __init__(self, name, shares, price):
+        self.name = name
+        self.shares = shares
+        self.price = price
+
+
+
+'''
+使用元类
+'''
+class checkedmeta(type):
+    def __new__(cls, clsname, bases, methods):
+        for key, value in methods.items():
+            if isinstance(value, Descriptor):
+                value.name = key
+        return type.__new__(cls, clsname, bases, methods)
+
+class Stock2(metaclass=checkedmeta):
+    name = SizedString(size=8)
+    shares = UnsignedInteger()
+    price = UnsignedFloat()
+
+    def __init__(self, name, shares, price):
+        self.name = name
+        self.shares = shares
+        self.price = price

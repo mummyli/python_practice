@@ -28,4 +28,29 @@ class MatchSignaturesMeta(type):
             if name.startswith("_") or not callable(value):
                 continue
 
-            prev_dfn = 
+            prev_dfn = getattr(sup, name, None)
+            if prev_dfn:
+                prev_sig = signature(prev_dfn)
+                val_sig = signature(value)
+                if prev_sig != val_sig:
+                    logging.warning('Signature mismatch in %s. %s != %s',
+                                    value.__qualname__, prev_sig, val_sig)
+
+
+class Root(metaclass=MatchSignaturesMeta):
+    pass
+
+class A(Root):
+    def foo(self, x, y):
+        pass
+
+    def spam(self, x, *, z):
+        pass
+
+# Class with redefined methods, but slightly different signatures
+class B(A):
+    def foo(self, a, b):
+        pass
+
+    def spam(self,x,z):
+        pass

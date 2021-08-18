@@ -47,4 +47,42 @@ class MultiDict(dict):
     def __setitem__(self, key, value):
         if(key in self):
             current_value = self[key]
-            if isinstance(current_value, MultiMethod)
+            if isinstance(current_value, MultiMethod):
+                current_value.register(value)
+            else:
+                mvalue = MultiMethod(key)
+                mvalue.register(current_value)
+                mvalue.register(value)
+                super().__setitem__(key, value)
+        else:
+            super().__setitem__(key, value)
+
+
+class MultipleMeta(type):
+    def __new__(cls, clsname, bases, clsdict):
+        return type.__new__(cls, clsname, bases, dict(clsdict))
+
+    @classmethod
+    def __prepare__(cls, clsname, bases):
+        return MultiDict()
+
+class Spam(metaclass=MultipleMeta):
+    def bar(self, x:int, y:int):
+        print('Bar 1:', x, y)
+
+    def bar(self, s:str, n:int = 0):
+        print('Bar 2:', s, n)
+
+print(Spam.__dict__)
+# Example: overloaded __init__
+import time
+
+class Date(metaclass=MultipleMeta):
+    def __init__(self, year: int, month:int, day:int):
+        self.year = year
+        self.month = month
+        self.day = day
+
+    def __init__(self):
+        t = time.localtime()
+        self.__init__(t.tm_year, t.tm_mon, t.tm_mday)
